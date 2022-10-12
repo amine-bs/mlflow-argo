@@ -1,0 +1,113 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: pizza-detector-training-workflow-v1
+  labels:
+    environment: production
+    app: pizza
+spec:
+  serviceAccountName: workflow   # the account that allows argo work to launch pods on k8s
+  entrypoint: main
+  #############################################################################################
+  #################### Part 1. Workflow configuration            ##############################
+  #############################################################################################
+  arguments:
+    parameters:
+      - name: aws-access-id
+        value: "changeme"
+      - name: aws-secret-key
+        value: "changeme"
+      - name: aws-session-token
+        value: "changeme"
+      - name: aws-default-region
+        value: "us-east-1"
+      - name: aws-s3-endpoint
+        value: "minio.lab.sspcloud.fr"
+       # The mlflow tracking server is responsable to log the hyper-parameter and model metrics,
+       # You can create it inside the datalab, and copy the url. Below is an example
+       # https://pengfei-mlflow-7841853311341079041-mlflow-ihm.kub.sspcloud.fr/
+      - name: mlflow-tracking-uri
+        value: 'https://user-mbenxsalha-561205.user.lab.sspcloud.fr/'
+      - name: mlflow-experiment-name
+        value: "Default"
+      - name: mlflow-s3-url
+        value: "https://minio.lab.sspcloud.fr"
+      - name: code-source-repo
+        value: "https://github.com/amine-bs/mlflow-argo.git"
+      - name: model-training-conf-list
+        value: |
+          [
+            { "lr": "0.01", "weight_decay": "0.001", "mlflow_run_name": "1"},
+            { "lr": "0.01", "weight_decay": "0.0001", "mlflow_run_name": "2"},
+            { "lr": "0.05", "weight_decay": "0.0001", "mlflow_run_name": "3"},
+            { "lr": "0.05", "weight_decay": "0.001", "mlflow_run_name": "4"}
+
+          ]
+ 
+
+  templates:
+    #############################################################################################
+    #################### Part 2. main workflow for planning dag  ##############################
+    #############################################################################################
+    - name: main
+      dag:
+        tasks:
+          # task 0: start pipeline
+          - name: start-pipeline
+            template: start-pipeline-wt
+          # task 1: train model with given params
+          - name: train-model-with-given-params
+            dependencies: [ start-pipeline ]
+            template: run-model-training-wt
+            arguments:
+              parameters:
+                - name: lr
+                  value: "{{item.lr}}"
+                - name: weight_decay
+                  value: "{{item.weight_decay}}"
+                - name: mlflow_run_name
+                  value: "{{item.mlflow_run_name}}"
+
+              # pass the inputs to the step "withParam"
+            withParam: "{{workflow.parameters.model-training-conf-list}}"
+    ####################################################################################################################
+    #################### Part 3: task template for implementing the logic of each task  #########################
+    ####################################################################################################################
+    # worker template for task-0 start-pipeline
+    - name: start-pipeline-wt
+      inputs:
+      container:
+        image: busybox
+        command: [ sh, -c ]
+        args: [ "echo start pipeline" ]
+
+    # worker template for task-1 train model
+    - name: run-model-training-wt
+      inputs:
+        parameters:
+          - name: lr
+          - name: weight_decay
+          - name: mlflow_run_name
+      container:
+        image: liupengfei99/mlflow:latest
+        command: [sh, -c]
+        args: ["mlflow run $CODE_SOURCE_URI --version main -P remote_server_uri=$MLFLOW_TRACKING_URI -P experiment_name=$MLFLOW_EXPERIMENT_NAME -P lr={{inputs.parameters.lr}} -P weight_decay={{inputs.parameters.weight_decay}} -P mlflow_run_name={{inputs.parameters.mlflow_run_name}}"]
+        env:
+          - name: AWS_SECRET_ACCESS_KEY
+            value: "{{workflow.parameters.aws-secret-key}}"
+          - name: AWS_DEFAULT_REGION
+            value: "{{workflow.parameters.aws-default-region}}"
+          - name: AWS_S3_ENDPOINT
+            value: "{{workflow.parameters.aws-s3-endpoint}}"
+          - name: AWS_SESSION_TOKEN
+            value: "{{workflow.parameters.aws-session-token}}"
+          - name: AWS_ACCESS_KEY_ID
+            value: "{{workflow.parameters.aws-access-id}}"
+          - name: MLFLOW_TRACKING_URI
+            value: "{{workflow.parameters.mlflow-tracking-uri}}"
+          - name: MLFLOW_EXPERIMENT_NAME
+            value: "{{workflow.parameters.mlflow-experiment-name}}"
+          - name: MLFLOW_S3_ENDPOINT_URL
+            value: "{{workflow.parameters.mlflow-s3-url}}"
+          - name: CODE_SOURCE_URI
+            value: "{{workflow.parameters.code-source-repo}}"

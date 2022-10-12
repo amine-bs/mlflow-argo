@@ -1,0 +1,13 @@
+name: pizza-detector
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - pip
+  - pip:
+    - torch
+    - torchvision
+    - boto3==1.17.19
+    - tqdm
+    - argparse
+    - mlflow
