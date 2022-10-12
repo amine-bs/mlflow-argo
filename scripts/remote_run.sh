@@ -12,5 +12,5 @@ epochs="1"
 batch_size="64"
 
 mlflow run https://github.com/amine-bs/mlflow-argo.git -P remote_server_uri=${MLFLOW_TRACKING_URI} \
--P experiment_name=${MLFLOW_EXPERIMENT_NAME} -P mlflow_run_name=${mlflow_run_name}
+-P mlflow_experiment_name=${MLFLOW_EXPERIMENT_NAME} -P mlflow_run_name=${mlflow_run_name}
 -P lr=${lr} -P weight_decay=${weight_decay} -P epochs=${epochs} -P batch_size=${batch_size}

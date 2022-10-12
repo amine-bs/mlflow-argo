@@ -91,7 +91,7 @@ spec:
       container:
         image: liupengfei99/mlflow:latest
         command: [sh, -c]
-        args: ["mlflow run $CODE_SOURCE_URI --version main -P remote_server_uri=$MLFLOW_TRACKING_URI -P experiment_name=$MLFLOW_EXPERIMENT_NAME -P lr={{inputs.parameters.lr}} -P weight_decay={{inputs.parameters.weight_decay}} -P mlflow_run_name={{inputs.parameters.mlflow_run_name}}"]
+        args: ["mlflow run $CODE_SOURCE_URI --version main -P remote_server_uri=$MLFLOW_TRACKING_URI -P mlflow_experiment_name=$MLFLOW_EXPERIMENT_NAME -P lr={{inputs.parameters.lr}} -P weight_decay={{inputs.parameters.weight_decay}} -P mlflow_run_name={{inputs.parameters.mlflow_run_name}}"]
         env:
           - name: AWS_SECRET_ACCESS_KEY
             value: "{{workflow.parameters.aws-secret-key}}"
