@@ -11,6 +11,7 @@ from tqdm import tqdm
 import mlflow
 
 
+
 def train(lr, weight_decay, epochs, batch_size, mlflow_experiment_name, mlflow_run_name):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     device = torch.device("cpu")
@@ -62,8 +63,9 @@ def train(lr, weight_decay, epochs, batch_size, mlflow_experiment_name, mlflow_r
         mlflow.log_param("weight decay", weight_decay)
         mlflow.log_metric("valdiation accuracy", val_accuracy)
         mlflow.log_metric("training accuracy", train_accuracy)
-        #mlflow.pytorch.log_model("model", model, code_paths=["model.py"])
-
+        #mlflow.log_dict(dict(model.state_dict()), "model_state_dict")
+        mlflow.pytorch.log_model(model, "model")
+        
 def evaluate(model, test_loader, device):
     correct_model, num_predictions = 0, 0
     model.eval()
