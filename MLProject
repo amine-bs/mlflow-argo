@@ -13,4 +13,4 @@ entry_points:
       epochs: {type: int, default: 1}
       batch_size: {type: int, default: 64}
       
-    command: "python main.py --lr {lr} --weight_decay {weight_decay} --epochs {epochs} --batch_size {batch_size} --mlflow_experiment_name {mlflow_experiment_name} --mlflow_run_name {mlflow_run_name}"
+    command: "python main.py --lr={lr} --weight_decay={weight_decay} --epochs={epochs} --batch_size={batch_size} --mlflow_experiment_name={mlflow_experiment_name} --mlflow_run_name={mlflow_run_name}"
