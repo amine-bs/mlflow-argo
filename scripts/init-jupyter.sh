@@ -7,6 +7,7 @@ CLONE_DIR=${WORK_DIR}/repo-git
 REPO_URL=https://github.com/amine-bs/mlflow-argo.git
 git clone --depth 1 $REPO_URL $CLONE_DIR
 rm -r ${CLONE_DIR}/utils
+rm ${CLONE_DIR}/scripts/init-jupyter.sh
 cp -r ${CLONE_DIR}/* ${WORK_DIR}/
 
 # Give write permissions
